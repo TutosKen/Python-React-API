@@ -1,23 +1,71 @@
-import logo from './logo.svg';
+import React,{ useEffect, useState } from 'react';
 import './App.css';
+import axios from 'axios';
+// Components imports
+import Form from './components/Form';
+import TodoList from './components/TodoList';
 
-function App() {
+const App = () => {
+  const [inputText, setInputText] = useState("");
+  const [todos, setTodos] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filteredTodos, setFilteredTodos] = useState([]);
+  const [status, setStatus] = useState("all");
+  var taskList = [];
+
+  // Get todos from API
+  const getTodos = () =>{
+    axios.get("http://127.0.0.1:5000/getTasks")
+    .then(response =>{
+      if (response !== undefined && response.data !== null) {
+        response.data.forEach(item => {taskList.push(item)});
+        setIsLoading(false);
+      }else{
+        alert("Error trying to add todo");
+      }
+    })
+    .catch(error => {
+      alert(`Error ${error}`);
+    });
+  
+    setTodos(taskList);
+  }
+
+  const filterHandler = () =>{
+    switch (status) {
+        case "completed":
+            setFilteredTodos(todos.filter(todo => todo.completed === true));
+            break;
+        case "uncompleted":
+            setFilteredTodos(todos.filter(todo => todo.completed === false));
+            break;
+    
+        default:
+            setFilteredTodos(todos);
+            break;
+    }
+  }
+
+  useEffect(() =>{
+    getTodos();
+  },[]);
+
+  useEffect(() =>{
+    filterHandler();
+  },[todos,status]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <div>
+      <header>
+        <h1>Todos App</h1>
       </header>
+      <Form 
+      inputText={inputText} 
+      setInputText={setInputText} 
+      todos={todos} 
+      setTodos={setTodos} 
+      setStatus={setStatus}/>
+      <TodoList todos={todos} setTodos={setTodos} filteredTodos={filteredTodos}/>
     </div>
   );
 }
